@@ -1,0 +1,59 @@
+# Build artifacts
+/bin/
+/out/
+
+# Rust (tools/risc0-dump)
+tools/risc0-dump/target/
+
+# Binary artifacts — never commit raw proofs, keys, witnesses, or R1CS.
+# Production receipts in particular must not enter version control.
+*.bin
+*.ccs
+
+# Allow committed JSON testdata (the snarkjs triple + risc0_params sidecar).
+!testdata/risc0/*.json
+# Allow the committed fixtures: journal + the raw receipt (chain_proof.bin), so
+# `make wrap-risc0` and the dumper both run from a fresh clone. The bytes are a
+# zero-knowledge proof carrying only public chain data.
+!testdata/risc0/journal.bin
+!testdata/risc0/chain_proof.bin
+# Second verify-only fixture under testdata/risc0/alt/.
+!testdata/risc0/alt/journal.bin
+!testdata/risc0/alt/chain_proof.bin
+
+# Local staging for raw oakshield receipts + their metadata.
+# NEVER commit these — the whole dir is local-only.
+testdata/oakshield/
+
+# Go
+*.test
+*.out
+coverage.html
+coverage.txt
+vendor/
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Local environment files
+.env
+.env.local
+
+# Direnv
+.envrc
+
+# Claude Code working files (per upstream gnark .gitignore convention, PR #1675)
+.claude/
+
+# Local-only development docs. README.md and SECURITY.md are the canonical
+# public documents. The files below are internal working docs — product spec,
+# agent operating rules, the inter-team interface contract, and the issue
+# tracker — kept locally and iterated on, but not part of the public surface.
+SPEC.md
+CLAUDE.md
+OPEN_ISSUES.md
+docs/WRAP_INTERFACE.md

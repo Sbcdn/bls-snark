@@ -1,0 +1,16 @@
+version: "2"
+
+linters:
+  enable:
+    - gosec
+  settings:
+    gosec:
+      excludes:
+        # File paths come from CLI flags by design (this is a CLI tool that
+        # reads operator-specified proof/key/journal paths). The path-traversal
+        # threat on --out-dir is handled explicitly (export.go::rejectTraversal).
+        - G304
+        # Noisy on len()->uintN and widening int->uint64 conversions, all of
+        # which are non-negative and bounded here (the real overflow guards in
+        # cardano_ref/ref.go are explicit range checks, not these conversions).
+        - G115

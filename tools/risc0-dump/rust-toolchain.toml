@@ -1,0 +1,6 @@
+# Pin the Rust toolchain so the dumper (and its image_id-affecting build) is
+# reproducible across hosts/CI rather than drifting with the floating `stable`
+# channel. Bump deliberately — a toolchain change can move build outputs.
+[toolchain]
+channel = "1.91.1"
+components = ["rustfmt", "clippy"]

@@ -1,0 +1,40 @@
+[package]
+name = "risc0-dump"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Dumps a RISC0 Groth16 Receipt (BN254 inner) into the three snarkjs JSON files consumed by bls-snark (Go)."
+
+[[bin]]
+name = "risc0-dump"
+path = "src/main.rs"
+
+[dependencies]
+# Versions pinned to oakshield's Cargo.lock — oakshield is the production
+# producer of wrapped receipts, so the dumper must track exactly what it
+# pins. Bumping these requires re-checking `CanonicalRISC0VKFingerprint`.
+#
+# Note: across risc0 3.0.2..3.0.3 of risc0-groth16 the canonical VK constants
+# and Groth16ReceiptVerifierParameters digest are byte-identical — verified
+# by re-pinning the dumper to 3.0.4/3.0.3/4.0.3 (midnight-groth16's
+# resolution) and observing the same `73c457ba…eedc` default fingerprint.
+risc0-zkvm                = { version = "=3.0.3", default-features = false, features = ["std"] }
+risc0-groth16             = "=3.0.2"
+risc0-circuit-recursion   = "=4.0.2"
+risc0-zkp                 = { version = "=3.0.2", default-features = false, features = ["std"] }
+risc0-binfmt              = "=3.0.2"
+
+ark-bn254     = "0.5"
+ark-ff        = "0.5"
+ark-serialize = "0.5"
+# Direct dep (pinned to risc0's resolution) so the VK-consistency test can
+# reconstruct an ark VerifyingKey<Bn254> from build_vk_json()'s constants and
+# diff it byte-for-byte against risc0_groth16::verifying_key().
+ark-groth16   = { version = "=0.5.0", default-features = false }
+
+bincode    = "1.3"
+serde_json = "1"
+anyhow     = "1"
+clap       = { version = "4", features = ["derive"] }
+hex        = "0.4"
+num-bigint = "0.4"
