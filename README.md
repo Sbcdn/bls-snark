@@ -304,13 +304,13 @@ Outer-proof byte breakdown (both phases): `Ar(48) + Bs(96) + Krs(48) + slice_hea
 
 ## On-chain verifier development
 
-The Cardano / Aiken validator that consumes `out/cardano/*.bin` is out of scope for this repo. [`internal/cardano_ref/`](./internal/cardano_ref/) ships a working reference implementation as the porting target:
+The Cardano / Aiken validator that consumes `out/cardano/*.bin` is out of scope for this repo. [`internal/cardanoref/`](./internal/cardanoref/) ships a working reference implementation as the porting target:
 
 - **Pure-Go reference verifier** — every primitive maps 1:1 to a Plutus/Aiken builtin (SHA-256, big-int reduction, G1/G2 decompress, scalar-mul, add, neg, pairing check). No MSM helpers, no gnark `Verify` shortcuts.
-- **Hex oracle** — `go test ./internal/cardano_ref/ -v -run PrintIntermediates` prints every intermediate value (`h_0` after each step of `expand_message_xmd`, Pedersen pairing inputs, the reduced commitment hash). An Aiken port diffs against this transcript.
+- **Hex oracle** — `go test ./internal/cardanoref/ -v -run PrintIntermediates` prints every intermediate value (`h_0` after each step of `expand_message_xmd`, Pedersen pairing inputs, the reduced commitment hash). An Aiken port diffs against this transcript.
 - **Tamper / acceptance gates** — `TestReferenceVerifierAccepts` confirms the reference accepts what gnark accepts; `TestReferenceMatchesGnarkOnTamper` confirms it rejects what gnark rejects.
 
-[`internal/cardano_ref/README.md`](./internal/cardano_ref/README.md) has the builtin-mapping table and the step-by-step validation workflow.
+[`internal/cardanoref/README.md`](./internal/cardanoref/README.md) has the builtin-mapping table and the step-by-step validation workflow.
 
 ---
 
@@ -325,7 +325,7 @@ bls-snark/
 │   ├── inner/                # cubic + risc0 inner-proof sources, VK fingerprint
 │   ├── parser/               # snarkjs JSON → native gnark BN254 types
 │   ├── serialize/            # gnark binary I/O + Cardano-minimal v2 byte formats
-│   ├── cardano_ref/          # pure-Go reference verifier (oracle for Aiken port)
+│   ├── cardanoref/           # pure-Go reference verifier (oracle for Aiken port)
 │   └── logging/              # zerolog wiring (logs → stderr; JSON → stdout)
 ├── tools/
 │   └── risc0-dump/           # Rust: bincode Receipt → snarkjs JSON + journal.bin
@@ -362,10 +362,10 @@ Headline tests, grouped by what they prove:
 - `internal/serialize:TestCardanoVKv2_Sizes` — pin exact byte sizes for the fixture (vk=1676, proof=388).
 
 **Aiken-side reference:**
-- `internal/cardano_ref:TestReferenceVerifierAccepts` — reference verifier accepts the real `out/cardano/*.bin`.
-- `internal/cardano_ref:TestReferenceMatchesGnarkOnTamper` — reference and gnark agree on rejection.
-- `internal/cardano_ref:TestReferencePrintIntermediates` — every intermediate value as a hex transcript.
-- `internal/cardano_ref:TestJournalToOuterPublicOracle` — 5 BN254 scalars ↔ 20 BLS12-381 limbs reconstruction transcript.
+- `internal/cardanoref:TestReferenceVerifierAccepts` — reference verifier accepts the real `out/cardano/*.bin`.
+- `internal/cardanoref:TestReferenceMatchesGnarkOnTamper` — reference and gnark agree on rejection.
+- `internal/cardanoref:TestReferencePrintIntermediates` — every intermediate value as a hex transcript.
+- `internal/cardanoref:TestJournalToOuterPublicOracle` — 5 BN254 scalars ↔ 20 BLS12-381 limbs reconstruction transcript.
 
 **Built-in guards:**
 - `internal/inner:TestLoadRISC0_*` (4 tests) — canonical-VK fingerprint check + override paths + insecure-skip path.

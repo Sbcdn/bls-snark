@@ -1,4 +1,4 @@
-// Package cardano_ref is a dependency-light reference implementation of the
+// Package cardanoref is a dependency-light reference implementation of the
 // on-chain Groth16-BLS12-381 verification equation for bls-snark's
 // Cardano-minimal v2 byte format. Every primitive maps 1:1 to an Aiken builtin:
 //
@@ -14,7 +14,7 @@
 // No MSM helpers; no gnark Verify; no gnark hash-to-field; v2 bytes are
 // hand-parsed (see ref_parsers.go). TestReferenceVerifierAccepts cross-checks
 // against gnark's groth16.Verify on the same inputs.
-package cardano_ref
+package cardanoref
 
 import (
 	"crypto/sha256"
@@ -41,7 +41,7 @@ const BLS12_381_FrModulusHex = "73eda753299d7d483339d80809a1d80553bda402fffe5bfe
 func BLS12_381_FrModulus() *big.Int {
 	r, ok := new(big.Int).SetString(BLS12_381_FrModulusHex, 16)
 	if !ok {
-		panic("cardano_ref: bad r constant")
+		panic("cardanoref: bad r constant")
 	}
 	return r
 }
@@ -60,11 +60,11 @@ func ExpandMessageXmdSHA256(msg, dst []byte, lenInBytes int) ([]byte, error) {
 	const bInBytes = 32
 	const rInBytes = 64
 	if len(dst) > 255 {
-		return nil, errors.New("cardano_ref: DST > 255 bytes")
+		return nil, errors.New("cardanoref: DST > 255 bytes")
 	}
 	ell := (lenInBytes + bInBytes - 1) / bInBytes
 	if ell > 255 {
-		return nil, errors.New("cardano_ref: lenInBytes too large")
+		return nil, errors.New("cardanoref: lenInBytes too large")
 	}
 
 	dstPrime := append(append([]byte{}, dst...), byte(len(dst)))
@@ -125,11 +125,11 @@ func ExpandMessageXmdSHA256(msg, dst []byte, lenInBytes int) ([]byte, error) {
 // Returns h_j as a big.Int, already reduced mod r_BLS12-381.
 func CommitmentHashH0(commitmentUncompressed []byte, publicWitnessBE [][]byte) (*big.Int, error) {
 	if len(commitmentUncompressed) != 96 {
-		return nil, fmt.Errorf("cardano_ref: commitmentUncompressed: want 96 B, got %d", len(commitmentUncompressed))
+		return nil, fmt.Errorf("cardanoref: commitmentUncompressed: want 96 B, got %d", len(commitmentUncompressed))
 	}
 	for i, w := range publicWitnessBE {
 		if len(w) != 32 {
-			return nil, fmt.Errorf("cardano_ref: publicWitnessBE[%d]: want 32 B, got %d", i, len(w))
+			return nil, fmt.Errorf("cardanoref: publicWitnessBE[%d]: want 32 B, got %d", i, len(w))
 		}
 	}
 
@@ -167,15 +167,15 @@ func CommitmentHashH0(commitmentUncompressed []byte, publicWitnessBE [][]byte) (
 // loop gnark uses.
 func VerifyOuter(vk *VK, proof *Proof, public *Public) error {
 	if vk.NC != proof.NC {
-		return fmt.Errorf("cardano_ref: vk.nC=%d but proof.nC=%d", vk.NC, proof.NC)
+		return fmt.Errorf("cardanoref: vk.nC=%d but proof.nC=%d", vk.NC, proof.NC)
 	}
 	if vk.NC != 1 {
-		return fmt.Errorf("cardano_ref: only nC=1 supported by this reference (got %d)", vk.NC)
+		return fmt.Errorf("cardanoref: only nC=1 supported by this reference (got %d)", vk.NC)
 	}
 	nbPub := uint32(len(public.LimbsBE))
 	expectedIC := 1 + nbPub + vk.NC // one-wire + publics + commitment wires
 	if uint32(len(vk.IC)) != expectedIC {
-		return fmt.Errorf("cardano_ref: ic_count=%d but expected 1+nbPub+nC=%d", len(vk.IC), expectedIC)
+		return fmt.Errorf("cardanoref: ic_count=%d but expected 1+nbPub+nC=%d", len(vk.IC), expectedIC)
 	}
 
 	// -----------------------------------------------------------------------
@@ -186,13 +186,13 @@ func VerifyOuter(vk *VK, proof *Proof, public *Public) error {
 		var committed [][]byte
 		for _, idx := range vk.CommittedIndices[j] {
 			if idx < 1 || idx > nbPub {
-				return fmt.Errorf("cardano_ref: committed index %d out of range [1, %d]", idx, nbPub)
+				return fmt.Errorf("cardanoref: committed index %d out of range [1, %d]", idx, nbPub)
 			}
 			committed = append(committed, public.LimbsBE[idx-1])
 		}
 		h, err := CommitmentHashH0(proof.CommitmentsUncompressed[j], committed)
 		if err != nil {
-			return fmt.Errorf("cardano_ref: hash commitment[%d]: %w", j, err)
+			return fmt.Errorf("cardanoref: hash commitment[%d]: %w", j, err)
 		}
 		hashes[j] = h
 	}
@@ -245,10 +245,10 @@ func VerifyOuter(vk *VK, proof *Proof, public *Public) error {
 		[]bls12381.G2Affine{proof.Bs, vk.BetaG2, vk.GammaG2, vk.DeltaG2},
 	)
 	if err != nil {
-		return fmt.Errorf("cardano_ref: main pairing: %w", err)
+		return fmt.Errorf("cardanoref: main pairing: %w", err)
 	}
 	if !ok {
-		return errors.New("cardano_ref: main pairing check failed (Groth16 equation)")
+		return errors.New("cardanoref: main pairing check failed (Groth16 equation)")
 	}
 
 	// -----------------------------------------------------------------------
@@ -265,10 +265,10 @@ func VerifyOuter(vk *VK, proof *Proof, public *Public) error {
 		[]bls12381.G2Affine{vk.PedersenGSigmaNeg[0], vk.PedersenG[0]},
 	)
 	if err != nil {
-		return fmt.Errorf("cardano_ref: pedersen pairing: %w", err)
+		return fmt.Errorf("cardanoref: pedersen pairing: %w", err)
 	}
 	if !ok {
-		return errors.New("cardano_ref: pedersen pairing check failed")
+		return errors.New("cardanoref: pedersen pairing check failed")
 	}
 
 	return nil

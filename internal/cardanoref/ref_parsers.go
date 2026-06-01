@@ -1,6 +1,6 @@
 // v2 byte-format parsers (hand-rolled — no gnark binary deserialisers) plus the
 // tiny byte-stream reader they share. The verification equation lives in ref.go.
-package cardano_ref
+package cardanoref
 
 import (
 	"encoding/binary"
@@ -50,7 +50,7 @@ type Public struct {
 // elemSize is the minimum bytes each element consumes.
 func boundAlloc(n uint32, elemSize, remaining int, label string) error {
 	if uint64(n)*uint64(elemSize) > uint64(remaining) {
-		return fmt.Errorf("cardano_ref: %s count %d exceeds %d remaining bytes (≥%d each)", label, n, remaining, elemSize)
+		return fmt.Errorf("cardanoref: %s count %d exceeds %d remaining bytes (≥%d each)", label, n, remaining, elemSize)
 	}
 	return nil
 }
@@ -119,7 +119,7 @@ func ParseVK(data []byte) (*VK, error) {
 		}
 	}
 	if r.left() != 0 {
-		return nil, fmt.Errorf("cardano_ref: vk.bin: %d trailing bytes", r.left())
+		return nil, fmt.Errorf("cardanoref: vk.bin: %d trailing bytes", r.left())
 	}
 	return vk, nil
 }
@@ -140,7 +140,7 @@ func ParseProof(data []byte) (*Proof, error) {
 	// Reject the point at infinity for A/B/C — a degenerate proof point makes
 	// the pairing equation trivial and ill-defined.
 	if p.Ar.IsInfinity() || p.Bs.IsInfinity() || p.Krs.IsInfinity() {
-		return nil, fmt.Errorf("cardano_ref: proof A/B/C must not be the point at infinity")
+		return nil, fmt.Errorf("cardanoref: proof A/B/C must not be the point at infinity")
 	}
 	nC, err := r.u32("nC")
 	if err != nil {
@@ -158,7 +158,7 @@ func ParseProof(data []byte) (*Proof, error) {
 		}
 		raw := make([]byte, 96)
 		if _, err := io.ReadFull(r.r, raw); err != nil {
-			return nil, fmt.Errorf("cardano_ref: commitment[%d] uncompressed: %w", j, err)
+			return nil, fmt.Errorf("cardanoref: commitment[%d] uncompressed: %w", j, err)
 		}
 		// The uncompressed copy is the hash-to-field input; the compressed copy
 		// enters the pairing. They are supplied independently in the wire format,
@@ -168,10 +168,10 @@ func ParseProof(data []byte) (*Proof, error) {
 		// on-chain port to omit. The on-chain validator must perform the same check.
 		var uncompressed bls12381.G1Affine
 		if _, err := uncompressed.SetBytes(raw); err != nil {
-			return nil, fmt.Errorf("cardano_ref: commitment[%d] uncompressed: invalid point: %w", j, err)
+			return nil, fmt.Errorf("cardanoref: commitment[%d] uncompressed: invalid point: %w", j, err)
 		}
 		if !uncompressed.Equal(&p.CommitmentsCompressed[j]) {
-			return nil, fmt.Errorf("cardano_ref: commitment[%d] compressed/uncompressed copies are different points", j)
+			return nil, fmt.Errorf("cardanoref: commitment[%d] compressed/uncompressed copies are different points", j)
 		}
 		p.CommitmentsUncompressed[j] = raw
 	}
@@ -179,7 +179,7 @@ func ParseProof(data []byte) (*Proof, error) {
 		return nil, err
 	}
 	if r.left() != 0 {
-		return nil, fmt.Errorf("cardano_ref: proof.bin: %d trailing bytes", r.left())
+		return nil, fmt.Errorf("cardanoref: proof.bin: %d trailing bytes", r.left())
 	}
 	return p, nil
 }
@@ -199,7 +199,7 @@ func ParsePublic(data []byte) (*Public, error) {
 	// product of two u32 fits in u64 (max (2^32-1)^2 < 2^64), so compare against
 	// remaining/32 — do NOT multiply by 32 (that itself overflows u64).
 	if uint64(nInner)*uint64(nLimbs) > uint64(r.left())/32 {
-		return nil, fmt.Errorf("cardano_ref: public.bin: n_inner_pub=%d × n_limbs=%d exceeds %d remaining 32-byte slots", nInner, nLimbs, r.left()/32)
+		return nil, fmt.Errorf("cardanoref: public.bin: n_inner_pub=%d × n_limbs=%d exceeds %d remaining 32-byte slots", nInner, nLimbs, r.left()/32)
 	}
 	total := int(nInner) * int(nLimbs)
 	p := &Public{
@@ -210,7 +210,7 @@ func ParsePublic(data []byte) (*Public, error) {
 	for i := 0; i < total; i++ {
 		limb := make([]byte, 32)
 		if _, err := io.ReadFull(r.r, limb); err != nil {
-			return nil, fmt.Errorf("cardano_ref: limb[%d]: %w", i, err)
+			return nil, fmt.Errorf("cardanoref: limb[%d]: %w", i, err)
 		}
 		// Reject non-canonical limbs (value ≥ r). ScalarMultiplication reduces mod
 		// r internally, so v and v+r would scalar-mult to the same point and the
@@ -218,12 +218,12 @@ func ParsePublic(data []byte) (*Public, error) {
 		// the same statement with different bytes. gnark's witness deserialiser
 		// enforces canonical reduction; a faithful on-chain mirror must too.
 		if v := new(big.Int).SetBytes(limb); v.Cmp(BLS12_381_FrModulus()) >= 0 {
-			return nil, fmt.Errorf("cardano_ref: limb[%d] not canonical: value ≥ BLS12-381 Fr modulus", i)
+			return nil, fmt.Errorf("cardanoref: limb[%d] not canonical: value ≥ BLS12-381 Fr modulus", i)
 		}
 		p.LimbsBE[i] = limb
 	}
 	if r.left() != 0 {
-		return nil, fmt.Errorf("cardano_ref: public.bin: %d trailing bytes", r.left())
+		return nil, fmt.Errorf("cardanoref: public.bin: %d trailing bytes", r.left())
 	}
 	return p, nil
 }
@@ -243,7 +243,7 @@ func newReader(data []byte) *reader {
 func (r *reader) u32(label string) (uint32, error) {
 	var v uint32
 	if err := binary.Read(r.r, binary.BigEndian, &v); err != nil {
-		return 0, fmt.Errorf("cardano_ref: %s: %w", label, err)
+		return 0, fmt.Errorf("cardanoref: %s: %w", label, err)
 	}
 	return v, nil
 }
@@ -251,10 +251,10 @@ func (r *reader) u32(label string) (uint32, error) {
 func (r *reader) g1(p *bls12381.G1Affine, label string) error {
 	var buf [48]byte
 	if _, err := io.ReadFull(r.r, buf[:]); err != nil {
-		return fmt.Errorf("cardano_ref: %s read: %w", label, err)
+		return fmt.Errorf("cardanoref: %s read: %w", label, err)
 	}
 	if _, err := p.SetBytes(buf[:]); err != nil {
-		return fmt.Errorf("cardano_ref: %s decompress: %w", label, err)
+		return fmt.Errorf("cardanoref: %s decompress: %w", label, err)
 	}
 	return nil
 }
@@ -262,10 +262,10 @@ func (r *reader) g1(p *bls12381.G1Affine, label string) error {
 func (r *reader) g2(p *bls12381.G2Affine, label string) error {
 	var buf [96]byte
 	if _, err := io.ReadFull(r.r, buf[:]); err != nil {
-		return fmt.Errorf("cardano_ref: %s read: %w", label, err)
+		return fmt.Errorf("cardanoref: %s read: %w", label, err)
 	}
 	if _, err := p.SetBytes(buf[:]); err != nil {
-		return fmt.Errorf("cardano_ref: %s decompress: %w", label, err)
+		return fmt.Errorf("cardanoref: %s decompress: %w", label, err)
 	}
 	return nil
 }

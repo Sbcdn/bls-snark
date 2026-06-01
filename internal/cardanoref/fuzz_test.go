@@ -1,4 +1,4 @@
-package cardano_ref
+package cardanoref
 
 import "testing"
 
@@ -25,7 +25,7 @@ func TestParsePublicRejectsOverflowCounts(t *testing.T) {
 }
 
 // The byte parsers take attacker-influenceable input (the Cardano *.bin files,
-// and cardano_ref is the on-chain verifier's reference). They must never panic.
+// and cardanoref is the on-chain verifier's reference). They must never panic.
 func FuzzParseVK(f *testing.F) {
 	f.Add([]byte{})
 	f.Add(make([]byte, 48+96+96+96+4))

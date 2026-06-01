@@ -33,13 +33,13 @@ Pre-1.0. Only the tip of `main` is supported.
 - **2026-05-31** — hardening batch: bounded untrusted-input parsing (size caps, alloc guards, overflow) + Go fuzz targets; refused the single-party setup without `--insecure-dev-setup`; `--out-dir` path-traversal guard.
 - **2026-05-31** — production-readiness audit (5-agent: ZK protocol, Go engineering, Groth16, interface-security, whitehat). No forgery: a tampered proof could not be made to verify against wrong data. Hardening: mandatory compressed/uncompressed commitment cross-check + tamper test; reject proof points at infinity; reject non-canonical public limbs (≥ r); `export` asserts `nC==1`; dumper test diffing `build_vk_json()` against `risc0_groth16::verifying_key()`. Still **no external audit** — required before production.
 
-Automated checks (CI `lint-audit` job): `golangci-lint` (incl. `gosec`) + `govulncheck` (fail on findings) and `cargo audit` for the Rust dumper deps (report-only — risc0-pinned). Parser/byte-reader fuzz targets in `internal/{parser,cardano_ref}`.
+Automated checks (CI `lint-audit` job): `golangci-lint` (incl. `gosec`) + `govulncheck` (fail on findings) and `cargo audit` for the Rust dumper deps (report-only — risc0-pinned). Parser/byte-reader fuzz targets in `internal/{parser,cardanoref}`.
 
 No external audit yet. Required before production deployment.
 
 ## Known security-relevant limitations
 
 - **Trusted setup** single-party path is **refused unless `--insecure-dev-setup`** (or `BLS_SNARK_INSECURE_DEV_SETUP=1`) is given; it's dev-only and toxic-waste-equivalent. When it runs, the result JSON stamps `"mode": "insecure-dev-setup"` and a multi-line `INSECURE` banner is logged. Production setups MUST use `--pk-input` / `--vk-input` passthrough against an MPC ceremony output.
-- **The on-chain verifier** is the consumer's deliverable. The Go reference verifier in `internal/cardano_ref/` is the soundness oracle.
+- **The on-chain verifier** is the consumer's deliverable. The Go reference verifier in `internal/cardanoref/` is the soundness oracle.
 - **Receipt fingerprint check** in `tools/risc0-dump` can be bypassed with `--accept-fingerprint <hex>` or `--insecure-skip-fingerprint-check`. Both emit a single-line `WARN:` to stderr regardless of receipt content; absence of that warning is the affirmative signal that the canonical default was used.
 - **Inner-VK fingerprint check** in `bls-snark setup` can be bypassed with `--insecure-no-vk-check` or overridden with `--inner-vk-fingerprint`. The setup result JSON stamps the resolved fingerprint (`inner_vk_fingerprint`) for post-hoc audit.

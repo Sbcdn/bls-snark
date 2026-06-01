@@ -1,4 +1,4 @@
-package cardano_ref
+package cardanoref
 
 import (
 	"encoding/hex"
@@ -23,7 +23,7 @@ const snarkjsPublicPath = "../../testdata/risc0/public.json"
 // emulated decomposition (Cardano Aiken, Solidity, off-chain auditor) must
 // reproduce byte-for-byte.
 //
-// Run with: `go test ./internal/cardano_ref/ -v -run JournalToOuterPublicOracle`
+// Run with: `go test ./internal/cardanoref/ -v -run JournalToOuterPublicOracle`
 func TestJournalToOuterPublicOracle(t *testing.T) {
 	if !haveCardanoArtifacts(t) {
 		t.Skip("out/cardano/*.bin not present — run `make wrap-risc0`")
