@@ -417,11 +417,11 @@ Pinned to match the version oakshield (the production producer) resolves to:
 
 | Crate | Version |
 |---|---|
-| `risc0-zkvm` | =3.0.3 |
-| `risc0-groth16` | =3.0.2 |
-| `risc0-circuit-recursion` | =4.0.2 |
-| `risc0-zkp` | =3.0.2 |
-| `risc0-binfmt` | =3.0.2 |
+| `risc0-zkvm` | =3.0.5 |
+| `risc0-groth16` | =3.0.4 |
+| `risc0-circuit-recursion` | =4.0.4 |
+| `risc0-zkp` | =3.0.4 |
+| `risc0-binfmt` | =3.0.4 |
 
 Upgrades are deliberate, not automatic. See [Updating risc0 pins](#updating-risc0-pins).
 
