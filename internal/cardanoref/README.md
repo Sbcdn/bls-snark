@@ -1,4 +1,4 @@
-# cardano_ref — Go reference verifier for the Cardano-minimal v2 format
+# cardanoref — Go reference verifier for the Cardano-minimal v2 format
 
 A dependency-light Go implementation of the on-chain Groth16-BLS12-381 verification equation for proofs produced by `bls-snark`. Reference code; optimised for clarity and 1:1 mapping with the Aiken / Plutus builtin surface.
 
@@ -28,14 +28,14 @@ make wrap-risc0
 
 # 2. Run the reference verifier against the real bytes (passes if the
 #    wrap is mathematically sound).
-go test ./internal/cardano_ref/ -v -run TestReferenceVerifierAccepts
+go test ./internal/cardanoref/ -v -run TestReferenceVerifierAccepts
 
 # 3. Dump every intermediate value the Aiken port needs to reproduce.
-go test ./internal/cardano_ref/ -v -run TestReferencePrintIntermediates
+go test ./internal/cardanoref/ -v -run TestReferencePrintIntermediates
 
 # 4. Dump the journal-lifting oracle: 5 BN254 Fr scalars (input form) +
 #    20 BLS12-381 Fr limbs (emulated form) in hex + decimal.
-go test ./internal/cardano_ref/ -v -run TestJournalToOuterPublicOracle
+go test ./internal/cardanoref/ -v -run TestJournalToOuterPublicOracle
 ```
 
 The third command prints every intermediate value as hex/decimal — `h_0` after each step of the SHA-256 expand, the Pedersen pairing inputs, etc. Compare against the equivalent step in your Aiken port; any divergence pinpoints the bug.
@@ -241,7 +241,7 @@ need to translate is the surface API.
 
 ## Tests
 
-Four tests, all under `go test ./internal/cardano_ref/`:
+Four tests, all under `go test ./internal/cardanoref/`:
 
 ### `TestReferenceVerifierAccepts`
 
@@ -325,7 +325,7 @@ Recommended workflow:
 make wrap-risc0
 
 # Step 2: capture the intermediate values for your Aiken test suite.
-go test ./internal/cardano_ref/ -v -run PrintIntermediates > aiken-oracle.txt
+go test ./internal/cardanoref/ -v -run PrintIntermediates > aiken-oracle.txt
 
 # Step 3: develop your Aiken implementation, checking each step against
 #         the oracle.

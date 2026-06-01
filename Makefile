@@ -58,7 +58,7 @@ test-dumper: ## cargo test the Rust risc0-dump (NOT in CI: needs the zkr artifac
 
 test-soundness: ## Re-run artifact-gated soundness tests; fail on any SKIP (run after `make wrap-risc0`)
 	@out=$$($(GO) test -v -count=1 -run '^($(SOUNDNESS_TESTS))$$' \
-	    ./internal/serialize/ ./internal/cardano_ref/ 2>&1); \
+	    ./internal/serialize/ ./internal/cardanoref/ 2>&1); \
 	  echo "$$out"; \
 	  if echo "$$out" | grep -q -- '--- SKIP'; then \
 	    echo "ERROR: a soundness test SKIPPED — wrap-risc0 artifacts missing or wrong shape (audit B1)"; \

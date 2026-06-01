@@ -1,4 +1,4 @@
-package cardano_ref
+package cardanoref
 
 import (
 	"bytes"
@@ -214,7 +214,7 @@ func TestParsePublicRejectsNonCanonicalLimb(t *testing.T) {
 // TestReferencePrintIntermediates dumps every intermediate value the Aiken
 // verifier needs to reproduce, as a hex oracle to diff against.
 //
-// Run with: `go test ./internal/cardano_ref/ -v -run PrintIntermediates`
+// Run with: `go test ./internal/cardanoref/ -v -run PrintIntermediates`
 func TestReferencePrintIntermediates(t *testing.T) {
 	if !haveCardanoArtifacts(t) {
 		t.Skip("out/cardano/*.bin not present — run `make wrap-risc0`")

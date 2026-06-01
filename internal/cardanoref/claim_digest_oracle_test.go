@@ -1,4 +1,4 @@
-package cardano_ref
+package cardanoref
 
 import (
 	"crypto/sha256"
@@ -20,7 +20,7 @@ import (
 // committed Mainnet fixtures. Run with `-v` to print every intermediate to diff
 // against your implementation:
 //
-//	go test ./internal/cardano_ref/ -v -run ClaimDigestOracle
+//	go test ./internal/cardanoref/ -v -run ClaimDigestOracle
 
 // taggedStruct reproduces risc0-binfmt's tagged_struct (hash.rs):
 //
