@@ -4,7 +4,7 @@
 
 ## Reporting a vulnerability
 
-Email **t.poguntke@pitcon.de** with a description, a reproducer if possible, and an impact assessment. Do not open public GitHub issues for vulnerabilities until a fix is available.
+Email **sbcdn@pm.me** with a description, a reproducer if possible, and an impact assessment. Do not open public GitHub issues for vulnerabilities until a fix is available.
 
 Expected initial acknowledgement: within 5 business days. Coordinated disclosure preferred.
 
