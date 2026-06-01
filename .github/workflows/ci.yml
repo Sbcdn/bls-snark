@@ -2,46 +2,16 @@ name: ci
 
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   pull_request:
 
 permissions:
   contents: read
 
 jobs:
-  test:
-    name: build + vet + test + smoke + wrap-risc0 + soundness
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - name: Check out
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.25.7'
-          cache: true
-
-      - name: Print versions
-        run: |
-          go version
-          go env GOPATH GOMODCACHE
-
-      - name: make all
-        run: make all
-
-      - name: Upload Cardano artifacts on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: out-on-failure
-          path: |
-            out/
-          retention-days: 7
-
-  lint-audit:
-    name: lint + vuln scan
+  # Fast gate — intended as the required status check for PRs into main.
+  quick:
+    name: build + vet + test-short + lint + audit
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -54,23 +24,57 @@ jobs:
           go-version: '1.25.7'
           cache: true
 
-      - name: golangci-lint (incl. gosec)
+      - name: vet + short unit tests
         run: |
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
-            | sh -s -- -b "$(go env GOPATH)/bin" v2.12.2
+          go vet ./...
+          go test -short ./...
+
+      - name: golangci-lint (incl. gosec)
+        # Build from source with this job's Go toolchain. Avoids the upstream
+        # install script's version/checksum drift and guarantees the linter is
+        # built with the same Go the module targets.
+        run: |
+          go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
           "$(go env GOPATH)/bin/golangci-lint" run --timeout=5m
 
-      - name: govulncheck (Go; fails only on vulns our code calls)
+      - name: govulncheck (fails only on vulns our code calls)
         run: |
           go install golang.org/x/vuln/cmd/govulncheck@latest
           "$(go env GOPATH)/bin/govulncheck" ./...
 
       # Rust dep CVE scan (reads Cargo.lock; no crate build → no zkr artifact
       # needed). Report-only: the dumper's deps are pinned to risc0's exact
-      # resolution, so an unfixable transitive advisory must not block CI —
-      # bumping risc0 is a coordinated event.
+      # resolution, so an unfixable transitive advisory must not block CI.
       - name: cargo audit (risc0-dump deps, report-only)
         continue-on-error: true
         run: |
           cargo install cargo-audit --locked || true
           cargo audit --file tools/risc0-dump/Cargo.lock
+
+  # Full end-to-end proving + soundness. Runs on PRs (for signal) and on pushes
+  # to main (catches a regression immediately post-merge). Heavier (~20 min), so
+  # it is not the required gate — see CONTRIBUTING/branch protection.
+  e2e:
+    name: smoke + wrap-risc0 + soundness
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.7'
+          cache: true
+
+      - name: end-to-end wrap + soundness
+        run: make smoke wrap-risc0 test-soundness
+
+      - name: Upload Cardano artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: out-on-failure
+          path: out/
+          retention-days: 7
