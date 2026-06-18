@@ -1,5 +1,11 @@
 # bls-snark
 
+> [!WARNING]
+> **Prototype — not production-ready. Use at your own risk.** The production
+> trusted-setup MPC ceremony is not yet in place (coming soon), and the code has
+> not had an external security audit. Evaluate it against your own RISC0 inputs;
+> do not deploy it to mainnet.
+
 Wrap a Groth16-BN254 proof in a Groth16-BLS12-381 proof verifiable on Cardano L1.
 
 The outer proof attests *"I know a valid BN254 Groth16 proof for this verifying key and these public inputs"* — verifiable on-chain using the BLS12-381 group + pairing builtins that ship in Plutus.
